@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>plinkit demo</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: WhiteSmoke;
+        color: #121212;
+        font-family: sans-serif;
+      }
+      .plinkit {
+        display: grid;
+        gap: 0;
+        padding: 20px 0;
+        width: min(100% - 20px, 600px);
+        margin: auto;
+      }
+      .plinkit__balance {
+        position: relative;
+        justify-items: center;
+      }
+      .plinkit__game {
+        justify-items: center;
+        overflow: hidden;
+      }
+      .plinkit__multipliers {
+        justify-items: center;
+        transform: translateY(-6px);
+      }
+      .plinkit__control {
+        justify-items: center;
+        padding-top: 20px;
+      }
+      #balance {
+        font-size: 14px;
+      }
+      canvas {
+        display: block;
+      }
+      #multipliers {
+        width: min(100% - 10px, 600px);
+        display: grid;
+        grid-template-columns: repeat(9, 1fr);
+        gap: 2px;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+      #multipliers span {
+        text-align: center;
+        padding: 4px 0;
+        color: WhiteSmoke;
+        border-radius: 4.5px;
+        font-weight: 700;
+        transition:
+          transform 275ms cubic-bezier(0.455, 0.03, 0.515, 0.955),
+          background-color 275ms cubic-bezier(0.455, 0.03, 0.515, 0.955),
+          color 275ms cubic-bezier(0.455, 0.03, 0.515, 0.955),
+          box-shadow 275ms cubic-bezier(0.455, 0.03, 0.515, 0.955);
+
+        &:nth-child(1) {
+          background: #1C58CB;
+          box-shadow: 0 3px 0 0 #0D285D;
+        }
+        &:nth-child(2) {
+          background: #573CDD;
+          box-shadow: 0 3px 0 0 #2C1E6F;
+        }
+        &:nth-child(3) {
+          background: #7728F6;
+          box-shadow: 0 3px 0 0 #401685;
+        }
+        &:nth-child(4) {
+          background: #C518E1;
+          box-shadow: 0 3px 0 0 #7A0F8B;
+        }
+        &:nth-child(5) {
+          background: #F85278;
+          box-shadow: 0 3px 0 0 #AE3A54;
+        }
+        &:nth-child(6) {
+          background: #FB36AF;
+          box-shadow: 0 3px 0 0 #A52473;
+        }
+        &:nth-child(7) {
+          background: #C518E1;
+          box-shadow: 0 3px 0 0 #7A0F8B;
+        }
+        &:nth-child(8) {
+          background: #7728F6;
+          box-shadow: 0 3px 0 0 #401685;
+        }
+        &:nth-child(9) {
+          background: #573CDD;
+          box-shadow: 0 3px 0 0 #2C1E6F;
+        }
+      }
+
+      #multipliers span.active {
+        transform: translateY(8px);
+        background: #7FC472;
+        box-shadow: 0 3px 0 0 #488D3E;
+      }
+
+      button {
+        --hue: 190deg;
+        --sat: 50%;
+        --blur: 2em;
+        --hue2: calc(var(--hue) + 60deg);
+        --sat2: calc(var(--sat) + 30%);
+        --clr: hsl(var(--hue) var(--sat) 85%);
+        --clr2: hsl(var(--hue2) var(--sat2) 85%);
+        --gradoffset: 45%;
+        --gradgap: 30%;
+        
+        display: block;
+        position: relative;
+        text-transform: uppercase;
+        font-size: 20px;
+        font-weight: 900;
+        color: DarkSlateGray;
+        letter-spacing: -0.025em;
+        background-color: var(--clr);
+        background-image: linear-gradient(180deg, var(--clr2) var(--gradgap), transparent calc(100% - var(--gradgap)));
+        background-repeat: no-repeat;
+        background-position: center var(--gradoffset);
+        background-size: 100% 200%;
+        padding: 0.6em 1.5em;
+        border-radius: 2em;
+        border: none;
+        overflow: hidden;
+        justify-content: center;
+        margin: 10px auto 0;
+        box-shadow: 0 -0.5em 0.5em transparent, 0 0.5em 0.5em transparent, 0 0.25em 0.3em -0.2em hsla(var(--hue), var(--sat), 50%, 0.36), 0 0.25em 0.75em hsla(var(--hue), calc(var(--sat) - 10%), 40%, 0.25);
+        transition: all 0.75s linear(0, 0.21 3.6%, 0.402 7.4%, 0.568 11.3%, 0.711 15.3%, 0.772 17.3%, 0.83 19.4%, 0.882 21.5%, 0.929 23.7%, 0.97 25.9%, 1.008 28.2%, 1.04 30.6%, 1.067 33%, 1.084 34.9%, 1.099 36.9%, 1.111 38.9%, 1.12 41%, 1.127 43.2%, 1.13 45.4%, 1.132 47.7%, 1.13 50.1%, 1.124 54%, 1.111 58.5%, 1.095 62.9%, 1.044 75.5%, 1.03 79.5%, 1.019 83.2%, 1.01 87.3%, 1.004 91.3%, 1.001 95.4%, 1);
+        outline: none;
+      }
+
+      button::before,
+      button::after {
+        content: "";
+        inset: 0;
+        position: absolute;
+        border-radius: 5em;
+      }
+
+      button::before {
+        background-image: radial-gradient(ellipse, hsla(var(--hue), 100%, 90%, 0.8) 20%, transparent 50%, transparent 200%), linear-gradient(90deg, #404040 -10%, transparent 30%, transparent 70%, #404040 110%);
+        box-shadow: inset 0 0.25em 0.75em rgba(0, 0, 0, 0.8), inset 0 -0.05em 0.2em rgba(255, 255, 255, 0.4), inset 0 -1px 3px hsla(var(--hue), 80%, 50%, 0.75);
+        background-blend-mode: overlay;
+        background-repeat: no-repeat;
+        background-size: 200% 80%, cover;
+        background-position: center 220%;
+        mix-blend-mode: overlay;
+        filter: blur(calc(var(--blur) / 32));
+      }
+
+      button::after {
+        background: linear-gradient(180deg, hsla(var(--hue2), 100%, 90%, 0.9), hsla(var(--hue2), calc(var(--sat2) * 0.7), 50%, 0.75) 40%, transparent 80%);
+        top: 0.075em;
+        left: 0.75em;
+        right: 0.75em;
+        bottom: 1.4em;
+        filter: blur(calc(var(--blur) / 16));
+        mix-blend-mode: screen;
+      }
+
+      button:hover,
+      button:active {
+        --shadow-size: 1;
+        outline: none;
+        background-position: center calc(var(--gradoffset) - 0.75em);
+      }
+
+      button:active {
+        --shadow-size: 0.75;
+        scale: 0.97;
+        translate: 0 1.5%;
+        transition: all 0.5s linear(0, 0.002 0.4%, 0.009 0.9%, 0.019 1.3%, 0.035 1.8%, 0.056 2.3%, 0.08 2.8%, 0.139 3.8%, 0.201 4.7%, 0.277 5.7%, 0.593 9.5%, 0.727 11.2%, 0.846 12.9%, 0.896 13.7%, 0.942 14.5%, 0.983 15.3%, 1.02 16.1%, 1.052 16.9%, 1.083 17.8%, 1.106 18.6%, 1.126 19.5%, 1.142 20.4%, 1.153 21.3%, 1.161 22.4%, 1.164 23.5%, 1.161 24.7%, 1.154 25.9%, 1.144 27%, 1.13 28.3%, 1.05 34.3%, 1.031 35.9%, 1.015 37.4%, 1 39.1%, 0.989 40.8%, 0.981 42.6%, 0.976 44.4%, 0.973 46.7%, 0.975 49.3%, 0.997 60.6%, 1.001 63.9%, 1.004 67.2%, 1.004 72.7%, 1 88.6%, 1);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="plinkit">
+      <div class="plinkit__balance">
+        <div id="balance"></div>
+      </div>
+      <div class="plinkit__game">
+        <canvas id="plinkit-canvas"></canvas>
+      </div>
+      <div class="plinkit__multipliers">
+        <div id="multipliers"></div>
+      </div>
+      <div class="plinkit__control">
+        <button id="spawn-ball" type="button">
+          <span>
+            Start
+          </span>
+        </button>
+      </div>
+    </main>
+
+    <script type="module">
+      import { Plinkit } from "/src/index.ts"
+      import { ClickTone } from "https://esm.sh/clicktone@2.1.0"
+      import pegTextureUrl from "./demo/images/peg.png?url"
+      import ballTextureUrl from "./demo/images/ball.png?url"
+
+      const multipliers = [7, 0.5, 0.2, 0.1, 0, 0.1, 0.2, 0.5, 7]
+      const canvas = document.getElementById("plinkit-canvas")
+      const button = document.getElementById("spawn-ball")
+      const balanceEl = document.getElementById("balance")
+      const multipliersEl = document.getElementById("multipliers")
+
+      if (
+        !(canvas instanceof HTMLCanvasElement) ||
+        !(button instanceof HTMLButtonElement) ||
+        !(balanceEl instanceof HTMLDivElement) ||
+        !(multipliersEl instanceof HTMLDivElement)
+      ) {
+        throw new Error("Demo elements not found")
+      }
+
+      multipliersEl.innerHTML = multipliers.map((value) => `<span>${value}×</span>`).join("")
+      const multiplierNodes = Array.from(multipliersEl.querySelectorAll("span"))
+      const highlightTimers = new Map()
+      const pegHit = new ClickTone({
+        src: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
+        volume: 0.2,
+        throttle: 35,
+        pitchVariation: 0.08,
+        preload: true,
+      })
+      const bucketHit = new ClickTone({
+        src: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
+        volume: 0.3,
+        replay: "interrupt",
+      })
+      const uiTap = new ClickTone({
+        src: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
+        volume: 0.15,
+      })
+
+      const plinkit = new Plinkit({
+        canvas,
+        viewport: {
+          dprCap: 2, // Верхний предел devicePixelRatio для рендера (баланс чёткости и производительности).
+          heightPolicy: {
+            topPaddingPx: 20, // Верхний отступ игрового поля в пикселях мира.
+            bottomPaddingPx: 0, // Нижний отступ игрового поля в пикселях мира.
+          },
+        },
+        gravityY: 0.65, // Сила гравитации по оси Y (больше => шар падает быстрее).
+        ballRadius: 14, // Базовый радиус шара в единицах игрового мира.
+        layout: {
+          mainPegs: {
+            sidePaddingPx: 1, // Добавочный отступ слева/справа от крайних пегов (в px мира).
+            radius: 8, // Базовый радиус пега для расчёта сетки.
+            topPegCount: 3, // Количество пегов в самом верхнем ряду пирамиды.
+            bottomPegCount: 10, // Количество пегов в самом нижнем ряду пирамиды.
+            verticalStepRatio: 0.86, // Вертикальный шаг рядов как доля от горизонтального шага.
+          },
+          edgeGuides: {
+            radius: 8, // Абсолютный радиус боковых направляющих пегов.
+            spread: 1.1, // Насколько сильнее раздвинуть направляющие от центра (1 = без сдвига).
+            yOffset: -2, // Вертикальный сдвиг направляющих (минус = выше, плюс = ниже).
+          },
+        },
+        multipliers, // Множители выплат по корзинам слева направо.
+        initialBalance: 20000, // Стартовый баланс игрока.
+        ballCost: 500, // Стоимость одного спавна шарика.
+        showGuidePegs: false, // Показывать ли вспомогательные (guide) пеги в рендере.
+        houseEdge: 0.40, // 0 = натуральная физика, 1 = максимальный bias к центру.
+        appearance: {
+          pegTextureUrl: pegTextureUrl,
+          ballTextureUrl: ballTextureUrl,
+        },
+        onCollision: (collision) => {
+          // Внешний звук теперь полностью на стороне приложения.
+          const hitVolume = Math.max(0.08, Math.min(0.45, collision.speed / 12))
+          pegHit.setVolume(hitVolume)
+          pegHit.play()
+        },
+        onBalanceChange: (state) => {
+          // Обновляем UI баланса и блокируем кнопку, если денег не хватает.
+          balanceEl.textContent = `Баланс: ${state.balance.toFixed(1)} | Цена шарика: ${state.ballCost}`
+          button.disabled = state.balance < state.ballCost
+        },
+        onBallSettled: (settlement) => {
+          bucketHit.play()
+          // Подсвечиваем корзину, в которую приземлился шар.
+          const target = multiplierNodes[settlement.bucketIndex]
+          if (!target) return
+          const existingTimer = highlightTimers.get(settlement.bucketIndex)
+          if (existingTimer) window.clearTimeout(existingTimer)
+          target.classList.add("active")
+          const timerId = window.setTimeout(() => {
+            target.classList.remove("active")
+            highlightTimers.delete(settlement.bucketIndex)
+          }, 420)
+          highlightTimers.set(settlement.bucketIndex, timerId)
+        },
+      })
+
+      button.addEventListener("click", () => {
+        ClickTone.unlock()
+        uiTap.play()
+        plinkit.spawnBall()
+      })
+    </script>
+  </body>
+</html>
