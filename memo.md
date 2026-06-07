@@ -20,7 +20,7 @@ npm publish --tag dev
 
 
 $ git add .
-$ git commit -m "release 1"
+$ git commit -m "fix: declaration output path for package builds"
 
 $ git tag -a v1.0.0 -m "1.0.0"
 $ git push origin master --follow-tags
